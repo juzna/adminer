@@ -266,7 +266,7 @@ FROM information_schema.table_constraints tc
 LEFT JOIN information_schema.key_column_usage kcu USING (constraint_catalog, constraint_schema, constraint_name)
 LEFT JOIN information_schema.referential_constraints rc USING (constraint_catalog, constraint_schema, constraint_name)
 LEFT JOIN information_schema.constraint_column_usage ccu ON rc.unique_constraint_catalog = ccu.constraint_catalog AND rc.unique_constraint_schema = ccu.constraint_schema AND rc.unique_constraint_name = ccu.constraint_name
-WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.constraint_schema = current_schema() AND tc.table_name = " . q($table) //! there can be more unique_constraint_name
+WHERE tc.constraint_name NOT LIKE '$%' AND tc.constraint_type = 'FOREIGN KEY' AND tc.constraint_schema = current_schema() AND tc.table_name = " . q($table) //! there can be more unique_constraint_name
 		) as $row) {
 			$foreign_key = &$return[$row["constraint_name"]];
 			if (!$foreign_key) {
@@ -539,12 +539,16 @@ AND typelem = 0"
 	function show_variables() {
 		return get_key_vals("SHOW ALL");
 	}
+
+	function process_list() {
+		return get_rows("SELECT datname,procpid,current_query FROM pg_stat_activity ORDER BY procpid");
+	}
 	
 	function show_status() {
 	}
 	
 	function support($feature) {
-		return ereg('^(comment|view|scheme|sequence|trigger|type|variables|drop_col)$', $feature); //! routine|
+		return ereg('^(comment|view|scheme|processlist|sequence|trigger|type|variables|drop_col)$', $feature); //! routine|
 	}
 	
 	$jush = "pgsql";

@@ -16,7 +16,7 @@ page_header(lang('Process list'), $error);
 <table cellspacing="0" onclick="tableClick(event);" class="nowrap">
 <?php
 $i = -1;
-foreach (get_rows("SHOW FULL PROCESSLIST") as $i => $row) {
+foreach (function_exists('process_list') ? process_list() : get_rows("SHOW FULL PROCESSLIST") as $i => $row) {
 	if (!$i) {
 		echo "<thead><tr lang='en'><th>&nbsp;<th>" . implode("<th>", array_keys($row)) . "</thead>\n";
 	}
@@ -30,6 +30,6 @@ foreach (get_rows("SHOW FULL PROCESSLIST") as $i => $row) {
 </table>
 <p><?php echo ($i + 1) . "/" . lang('%d in total', $connection->result("SELECT @@max_connections")); ?>
 <p>
-<input type="submit" value="<?php echo lang('Kill'); ?>">
+<?php if(support('kill')) { ?><input type="submit" value="<?php echo lang('Kill'); ?>"><?php } ?>
 <input type="hidden" name="token" value="<?php echo $token; ?>">
 </form>
