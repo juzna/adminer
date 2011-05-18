@@ -567,7 +567,7 @@ AND typelem = 0"
 	}
 	
 	function support($feature) {
-		return ereg('^(comment|view|scheme|processlist|sequence|trigger|type|variables|drop_col)$', $feature); //! routine|
+		return ereg('^(comment|view|scheme|processlist|sequence|trigger|type|variables|drop_col|routine)$', $feature); //! routine|
 	}
 	
 	$jush = "pgsql";
