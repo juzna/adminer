@@ -27,6 +27,7 @@ function connect_error() {
 			set_session("dbs", null);
 		}
 		$databases = get_databases();
+		sort($databases);
 		if ($databases) {
 			$scheme = support("scheme");
 			$collations = collations();
