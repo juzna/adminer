@@ -112,6 +112,7 @@ username.form['driver'].onchange();
 		if (isset($set)) {
 			$links["edit"] = lang('New item');
 		}
+		$links['phpdoc'] = lang('Generate PHPdoc');
 		foreach ($links as $key => $val) {
 			echo " <a href='" . h(ME) . "$key=" . urlencode($tableStatus["Name"]) . ($key == "edit" ? $set : "") . "'" . bold(isset($_GET[$key])) . ">$val</a>";
 		}
