@@ -27,9 +27,10 @@ function escape_string($val) {
 
 /** Disable magic_quotes_gpc
 * @param array e.g. (&$_GET, &$_POST, &$_COOKIE)
+* @param bool whether to leave values as is
 * @return null modified in place
 */
-function remove_slashes($process) {
+function remove_slashes($process, $filter = false) {
 	if (get_magic_quotes_gpc()) {
 		while (list($key, $val) = each($process)) {
 			foreach ($val as $k => $v) {
@@ -92,7 +93,7 @@ function nl_br($string) {
 function checkbox($name, $value, $checked, $label = "", $onclick = "", $jsonly = false) {
 	static $id = 0;
 	$id++;
-	$return = "<input type='checkbox' name='$name' value='" . h($value) . "'" . ($checked ? " checked" : "") . ($onclick ? " onclick=\"$onclick\"" : "") . ($jsonly ? " class='jsonly'" : "") . " id='checkbox-$id'>";
+	$return = "<input type='checkbox' name='$name' value='" . h($value) . "'" . ($checked ? " checked" : "") . ($onclick ? ' onclick="' . h($onclick) . '"' : '') . ($jsonly ? " class='jsonly'" : "") . " id='checkbox-$id'>";
 	return ($label != "" ? "<label for='checkbox-$id'>$return" . h($label) . "</label>" : $return);
 }
 
@@ -129,7 +130,7 @@ function optionlist($options, $selected = null, $use_keys = false) {
 */
 function html_select($name, $options, $value = "", $onchange = true) {
 	if ($onchange) {
-		return "<select name='" . h($name) . "'" . (is_string($onchange) ? " onchange=\"$onchange\"" : "") . ">" . optionlist($options, $value) . "</select>";
+		return "<select name='" . h($name) . "'" . (is_string($onchange) ? ' onchange="' . h($onchange) . '"' : "") . ">" . optionlist($options, $value) . "</select>";
 	}
 	$return = "";
 	foreach ($options as $key => $val) {
@@ -147,12 +148,62 @@ function confirm($count = "", $stop = false) {
 	return " onclick=\"" . ($stop ? "eventStop(event); " : "") . "return confirm('" . lang('Are you sure?') . ($count ? " (' + $count + ')" : "") . "');\"";
 }
 
+/** Print header for hidden fieldset (close by </div></fieldset>)
+* @param string
+* @param string
+* @param bool
+* @param string
+* @return null
+*/
+function print_fieldset($id, $legend, $visible = false, $onclick = "") {
+	echo "<fieldset><legend><a href='#fieldset-$id' onclick=\"" . h($onclick) . "return !toggle('fieldset-$id');\">$legend</a></legend><div id='fieldset-$id'" . ($visible ? "" : " class='hidden'") . ">\n";
+}
+
+/** Return class='active' if $bold is true
+* @param bool
+* @return string
+*/
+function bold($bold) {
+	return ($bold ? " class='active'" : "");
+}
+
+/** Generate class for odd rows
+* @param string return this for odd rows, empty to reset counter
+* @return string
+*/
+function odd($return = ' class="odd"') {
+	static $i = 0;
+	if (!$return) { // reset counter
+		$i = -1;
+	}
+	return ($i++ % 2 ? $return : '');
+}
+
 /** Escape string for JavaScript apostrophes
 * @param string
 * @return string
 */
 function js_escape($string) {
 	return addcslashes($string, "\r\n'\\/"); // slash for <script>
+}
+
+/** Print one row in JSON object
+* @param string or "" to close the object
+* @param string
+* @return null
+*/
+function json_row($key, $val = null) {
+	static $first = true;
+	if ($first) {
+		echo "{";
+	}
+	if ($key != "") {
+		echo ($first ? "" : ",") . "\n\t\"" . addcslashes($key, "\r\n\"\\") . '": ' . (isset($val) ? '"' . addcslashes($val, "\r\n\"\\") . '"' : 'undefined');
+		$first = false;
+	} else {
+		echo "\n}\n";
+		$first = true;
+	}
 }
 
 /** Get INI boolean value
@@ -516,35 +567,14 @@ function upload_error($error) {
 	return ($error ? lang('Unable to upload a file.') . ($max_size ? " " . lang('Maximum allowed file size is %sB.', $max_size) : "") : lang('File does not exist.'));
 }
 
-/** Generate class for odd rows
-* @param string return this for odd rows, empty to reset counter
+/** Create repeat pattern for preg
+* @param string
+* @param int
 * @return string
 */
-function odd($return = ' class="odd"') {
-	static $i = 0;
-	if (!$return) { // reset counter
-		$i = -1;
-	}
-	return ($i++ % 2 ? $return : '');
-}
-
-/** Print one row in JSON object
-* @param string or "" to close the object
-* @param string
-* @return null
-*/
-function json_row($key, $val = null) {
-	static $first = true;
-	if ($first) {
-		echo "{";
-	}
-	if ($key != "") {
-		echo ($first ? "" : ",") . "\n\t\"" . addcslashes($key, "\r\n\"\\") . '": ' . (isset($val) ? '"' . addcslashes($val, "\r\n\"\\") . '"' : 'undefined');
-		$first = false;
-	} else {
-		echo "\n}\n";
-		$first = true;
-	}
+function repeat_pattern($pattern, $length) {
+	// fix for Compilation failed: number too big in {} quantifier
+	return str_repeat("$pattern{0,65535}", $length / 65535) . "$pattern{0," . ($length % 65535) . "}"; // can create {0,0} which is OK
 }
 
 /** Check whether the string is in UTF-8
@@ -554,16 +584,6 @@ function json_row($key, $val = null) {
 function is_utf8($val) {
 	// don't print control chars except \t\r\n
 	return (preg_match('~~u', $val) && !preg_match('~[\\0-\\x8\\xB\\xC\\xE-\\x1F]~', $val));
-}
-
-/** Create repeat pattern for preg
-* @param string
-* @param int
-* @return string
-*/
-function repeat_pattern($pattern, $length) {
-	// fix for Compilation failed: number too big in {} quantifier
-	return str_repeat("$pattern{0,65535}", $length / 65535) . "$pattern{0," . ($length % 65535) . "}"; // can create {0,0} which is OK
 }
 
 /** Shorten UTF-8 string
@@ -675,7 +695,7 @@ function input($field, $value, $function) {
 			}
 			$first++;
 		}
-		$onchange = ($first ? " onchange=\"var f = this.form['function[" . js_escape($name) . "]']; if ($first > f.selectedIndex) f.selectedIndex = $first;\"" : "");
+		$onchange = ($first ? " onchange=\"var f = this.form['function[" . h(js_escape(bracket_escape($field["field"]))) . "]']; if ($first > f.selectedIndex) f.selectedIndex = $first;\"" : "");
 		$attrs .= $onchange;
 		echo (count($functions) > 1 ? html_select("function[$name]", $functions, !isset($function) || in_array($function, $functions) || isset($functions[$function]) ? $function : "", "functionChange(this);") : nbsp(reset($functions))) . '<td>';
 		$input = $adminer->editInput($_GET["edit"], $field, $attrs, $value); // usage in call is without a table
@@ -853,23 +873,4 @@ function is_mail($email) {
 function is_url($string) {
 	$domain = '[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])'; // one domain component //! IDN
 	return (preg_match("~^(https?)://($domain?\\.)+$domain(:\\d+)?(/.*)?(\\?.*)?(#.*)?\$~i", $string, $match) ? strtolower($match[1]) : ""); //! restrict path, query and fragment characters
-}
-
-/** Print header for hidden fieldset (close by </div></fieldset>)
-* @param string
-* @param string
-* @param bool
-* @param string
-* @return null
-*/
-function print_fieldset($id, $legend, $visible = false, $onclick = "") {
-	echo "<fieldset><legend><a href='#fieldset-$id' onclick=\"$onclick" . "return !toggle('fieldset-$id');\">$legend</a></legend><div id='fieldset-$id'" . ($visible ? "" : " class='hidden'") . ">\n";
-}
-
-/** Return class='active' if $bold is true
-* @param bool
-* @return string
-*/
-function bold($bold) {
-	return ($bold ? " class='active'" : "");
 }

@@ -17,10 +17,12 @@ if (isset($_GET["pgsql"])) {
 			}
 			
 			function connect($server, $username, $password) {
+				global $adminer;
+				$db = $adminer->database();
 				set_error_handler(array($this, '_error'));
 				$this->_string = "host='" . str_replace(":", "' port='", addcslashes($server, "'\\")) . "' user='" . addcslashes($username, "'\\") . "' password='" . addcslashes($password, "'\\") . "'";
-				$this->_link = @pg_connect($this->_string . (DB != "" ? " dbname='" . addcslashes(DB, "'\\") . "'" : " dbname='template1'"), PGSQL_CONNECT_FORCE_NEW);
-				if (!$this->_link && DB != "") {
+				$this->_link = @pg_connect($this->_string . ($db != "" ? " dbname='" . addcslashes($db, "'\\") . "'" : " dbname='template1'"), PGSQL_CONNECT_FORCE_NEW);
+				if (!$this->_link && $db != "") {
 					// try to connect directly with database for performance
 					$this->_database = false;
 					$this->_link = @pg_connect("$this->_string dbname='template1'", PGSQL_CONNECT_FORCE_NEW);
@@ -39,7 +41,8 @@ if (isset($_GET["pgsql"])) {
 			}
 			
 			function select_db($database) {
-				if ($database == DB) {
+				global $adminer;
+				if ($database == $adminer->database()) {
 					return $this->_database;
 				}
 				$return = @pg_connect("$this->_string dbname='" . addcslashes($database, "'\\") . "'", PGSQL_CONNECT_FORCE_NEW);
@@ -126,14 +129,17 @@ if (isset($_GET["pgsql"])) {
 			var $extension = "PDO_PgSQL";
 			
 			function connect($server, $username, $password) {
+				global $adminer;
+				$db = $adminer->database();
 				$string = "pgsql:host='" . str_replace(":", "' port='", addcslashes($server, "'\\")) . "' options='-c client_encoding=utf8'";
-				$this->dsn($string . (DB != "" ? " dbname='" . addcslashes(DB, "'\\") . "'" : ""), $username, $password);
+				$this->dsn($string . ($db != "" ? " dbname='" . addcslashes($db, "'\\") . "'" : ""), $username, $password);
 				//! connect without DB in case of an error
 				return true;
 			}
 			
 			function select_db($database) {
-				return (DB == $database);
+				global $adminer;
+				return ($adminer->database() == $database);
 			}
 			
 			function close() {
@@ -235,7 +241,9 @@ ORDER BY a.attnum"
 			$row["null"] = ($row["attnotnull"] == "f");
 			$row["auto_increment"] = eregi("^nextval\\(", $row["default"]);
 			$row["privileges"] = array("insert" => 1, "select" => 1, "update" => 1);
-			if(preg_match("~'(.*)'::[a-z ]+~A", $row['default'], $match)) $row['default'] = $match[1];
+			if (preg_match('~^(.*)::.+$~', $row["default"], $match)) {
+				$row["default"] = ($match[1][0] == "'" ? idf_unescape($match[1]) : $match[1]);
+			}
 			$return[$row["field"]] = $row;
 		}
 		return $return;
@@ -571,14 +579,14 @@ AND typelem = 0"
 	}
 
 	function process_list() {
-		return get_rows("SELECT datname,procpid,current_query FROM pg_stat_activity ORDER BY procpid");
+		return get_rows("SELECT * FROM pg_stat_activity ORDER BY procpid");
 	}
 	
 	function show_status() {
 	}
 	
 	function support($feature) {
-		return ereg('^(comment|view|scheme|processlist|sequence|trigger|type|variables|drop_col|routine)$', $feature); //! routine|
+		return ereg('^(comment|view|scheme|processlist|sequence|trigger|type|variables|drop_col)$', $feature); //! routine|
 	}
 	
 	$jush = "pgsql";
