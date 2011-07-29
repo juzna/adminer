@@ -57,6 +57,19 @@ if (isset($_GET["pgsql"])) {
 			}
 			
 			function query($query, $unbuffered = false) {
+				$ts = microtime(true);
+				$ret = $this->_query($query, $unbuffered);
+				$duration = microtime(true) - $ts;
+				
+				if($duration > 1) {
+					$e = new Exception("Too long execution");
+					file_put_contents("/tmp/pg_long.log", "$duration\t$query\n$e\n\n", FILE_APPEND);
+				}
+				
+				return $ret;
+			}
+			
+			function _query($query, $unbuffered = false) {
 				$result = @pg_query($this->_link, $query);
 				if (!$result) {
 					$this->error = pg_last_error($this->_link);
