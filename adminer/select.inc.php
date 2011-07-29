@@ -373,9 +373,8 @@ if (!$columns) {
 		if ($rows || $page) {
 			$exact_count = true;
 			if ($_GET["page"] != "last" && +$limit && count($group) >= count($select) && ($found_rows >= $limit || $page)) {
-				$found_rows = $table_status["Rows"];
-				if ($table_status['Data_length'] > 100e6) $found_rows = false; // speed optimization
-				elseif (!isset($found_rows) || $where || ($table_status["Engine"] == "InnoDB" && $found_rows < max(1e4, 2 * ($page + 1) * $limit))) {
+				$found_rows = found_rows($table_status, $where);
+				if ($found_rows < max(1e4, 2 * ($page + 1) * $limit)) {
 					// slow with big tables
 					ob_flush(); //! doesn't work with AJAX
 					flush();
@@ -385,12 +384,6 @@ if (!$columns) {
 				}
 			}
 			echo "<p class='pages'>";
-			if ($found_rows === false) { // Skipped because of data size
-				$exact_count = false;
-				echo "(table to big, not counting rows!) ";
-				if(+$limit) $found_rows = $limit + 1e4;
-				$just_guessing = true;
-			} 
 			if (+$limit && $found_rows > $limit) {
 				// display first, previous 4, next 4 and last page
 				$max_page = floor(($found_rows - 1) / $limit);
@@ -401,7 +394,7 @@ if (!$columns) {
 				}
 				echo ($page + 5 < $max_page ? " ..." : "") . ($exact_count ? pagination($max_page, $page) : ' <a href="' . h(remove_from_uri() . "&page=last") . '">' . lang('last') . "</a>");
 			}
-			echo " (" . ($exact_count ? "" : "~ ") . lang('%d row(s)', $just_guessing ? 0 : $found_rows) . ") " . checkbox("all", 1, 0, lang('whole result')) . "\n";
+			echo " (" . ($exact_count ? "" : "~ ") . lang('%d row(s)', $found_rows) . ") " . checkbox("all", 1, 0, lang('whole result')) . "\n";
 			
 			if ($adminer->selectCommandPrint()) {
 				?>

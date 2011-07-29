@@ -356,7 +356,7 @@ if (!defined("DRIVER")) {
 
 	/** Get table status
 	* @param string
-	* @return array
+	* @return array array($name => array("Name" => , "Engine" => , "Comment" => , "Oid" => , "Rows" => , "Collation" => , "Auto_increment" => , "Data_length" => , "Index_length" => , "Data_free" => )) or only inner array with $name
 	*/
 	function table_status($name = "") {
 		$return = array();
@@ -820,6 +820,15 @@ if (!defined("DRIVER")) {
 	*/
 	function explain($connection, $query) {
 		return $connection->query("EXPLAIN $query");
+	}
+	
+	/** Get approximate number of rows
+	* @param array
+	* @param array
+	* @return int or null if approximate number can't be retrieved
+	*/
+	function found_rows($table_status, $where) {
+		return ($where || $table_status["Engine"] != "InnoDB" ? null : $table_status["Rows"]);
 	}
 	
 	/** Get user defined types
