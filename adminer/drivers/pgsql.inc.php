@@ -483,7 +483,6 @@ WHERE tc.constraint_name NOT LIKE '$%' AND tc.constraint_type = 'FOREIGN KEY' AN
 		);
 	}
 	
-	/*
 	function routine($name, $type) {
 		//! there can be more functions with the same name differing only in parameters, it must be also passed to DROP FUNCTION
 		//! no procedures, only functions
@@ -495,7 +494,6 @@ WHERE n.nspname = current_schema() AND p.proname = ' . q($name));
 		$rows[0]["fields"] = array(); //!
 		return $rows[0];
 	}
-	*/
 	
 	function routines() {
 		return get_rows('SELECT p.proname AS "ROUTINE_NAME", p.proargtypes AS "ROUTINE_TYPE", pg_catalog.format_type(p.prorettype, NULL) AS "DTD_IDENTIFIER"
@@ -586,7 +584,7 @@ AND typelem = 0"
 	}
 	
 	function support($feature) {
-		return ereg('^(comment|view|scheme|processlist|sequence|trigger|type|variables|drop_col)$', $feature); //! routine|
+		return ereg('^(comment|view|scheme|processlist|sequence|trigger|type|variables|drop_col|routine)$', $feature); //! routine|
 	}
 	
 	$jush = "pgsql";
