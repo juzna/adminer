@@ -298,6 +298,14 @@ WHERE tc.constraint_name NOT LIKE '$%' AND tc.constraint_type = 'FOREIGN KEY' AN
 	}
 	
 	function foreign_keys_to($table) {
+		// Try cache first
+		$cache = get_session('foreignKeys');
+		if(isset($cache[$table])) return $cache[$table];
+
+		restart_session();
+		$cache = &get_session('foreignKeys');
+		$return = &$cache[$table];		
+		
 		$return = array();
 		foreach (get_rows("SELECT tc.constraint_name, ccu.column_name, rc.update_rule AS on_update, rc.delete_rule AS on_delete, tc.table_name AS table, kcu.column_name AS ref
 FROM information_schema.table_constraints tc
@@ -313,6 +321,8 @@ WHERE tc.constraint_name NOT LIKE '$%' AND tc.constraint_type = 'FOREIGN KEY' AN
 			$foreign_key["source"][] = $row["column_name"];
 			$foreign_key["target"][] = $row["ref"];
 		}
+		
+		session_write_close();
 		return $return;
 	}
 
