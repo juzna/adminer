@@ -6,10 +6,8 @@ if (!$fields) {
 }
 $table_status = ($fields ? table_status($TABLE) : array());
 
-page_header(($fields && is_view($table_status) ? lang('View') : lang('Table')) . ": " . h($TABLE), $error);
+page_header(lang('PHP doc') . ": " . h($TABLE), $error);
 $adminer->selectLinks($table_status);
-
-echo '<h2>' . lang('PHP doc') . '</h2>';
 
 $types = array(
 	'~integer|smallint~A' => 'int',
