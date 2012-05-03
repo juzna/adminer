@@ -465,6 +465,25 @@ if (!defined("DRIVER")) {
 		return $return;
 	}
 
+	function foreign_keys_to($table) {
+		$return = array();
+		foreach (get_rows("
+SELECT CONSTRAINT_NAME, COLUMN_NAME, kcu.TABLE_SCHEMA as db, kcu.TABLE_NAME as `table`, REFERENCED_COLUMN_NAME as ref, UPDATE_RULE as on_update, DELETE_RULE as on_delete
+FROM information_schema.KEY_COLUMN_USAGE kcu
+LEFT JOIN information_schema.referential_constraints rc USING (constraint_schema, constraint_name)
+WHERE kcu.REFERENCED_TABLE_NAME = " . q($table) . "
+ORDER BY ORDINAL_POSITION
+			") as $row) {
+			$foreign_key = &$return[$row["CONSTRAINT_NAME"]];
+			if (!$foreign_key) {
+				$foreign_key = $row;
+			}
+			$foreign_key["source"][] = $row["COLUMN_NAME"];
+			$foreign_key["target"][] = $row["ref"];
+		}
+		return $return;
+	}
+
 	/** Get view SELECT
 	* @param string
 	* @return array array("select" => )
