@@ -1,4 +1,5 @@
 <?php
+$forcePdo = $_GET['forcePdo'];
 /** Adminer - Compact database management
 * @link http://www.adminer.org/
 * @author Jakub Vrana, http://www.vrana.cz/
@@ -31,6 +32,10 @@ if (isset($_GET["download"])) {
 	include "./dump.inc.php";
 } elseif (isset($_GET["privileges"])) {
 	include "./privileges.inc.php";
+} elseif (isset($_GET["notorm"])) {
+	include "./notorm.inc.php";
+} elseif (isset($_GET["ndb"])) {
+	include "./ndb.inc.php";
 } elseif (isset($_GET["sql"])) {
 	include "./sql.inc.php";
 } elseif (isset($_GET["edit"])) {

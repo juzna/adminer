@@ -768,7 +768,9 @@ DROP PROCEDURE adminer_alter;
 <p class="logout">
 <?php
 			if (DB == "" || !$missing) {
-				echo "<a href='" . h(ME) . "sql='" . bold(isset($_GET["sql"])) . ">" . lang('SQL command') . "</a>\n";
+				echo "<a href='" . h(ME) . "sql='" . bold(isset($_GET["sql"])) . ">" . lang('SQL') . "</a>\n";
+				echo "<a href='" . h(ME) . "notorm=&forcePdo=1'" . bold(isset($_GET["notorm"])) . ">" . lang('NotORM') . "</a>\n";
+				echo "<a href='" . h(ME) . "ndb=&forcePdo=1'" . bold(isset($_GET["ndb"])) . ">" . lang('NDB') . "</a>\n";
 				if (support("dump")) {
 					echo "<a href='" . h(ME) . "dump=" . urlencode(isset($_GET["table"]) ? $_GET["table"] : $_GET["select"]) . "' id='dump'" . bold(isset($_GET["dump"])) . ">" . lang('Dump') . "</a>\n";
 				}

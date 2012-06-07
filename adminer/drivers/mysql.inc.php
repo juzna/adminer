@@ -5,7 +5,7 @@ if (!defined("DRIVER")) {
 	$possible_drivers = array("MySQLi", "MySQL", "PDO_MySQL");
 	define("DRIVER", "server"); // server - backwards compatibility
 	// MySQLi supports everything, MySQL doesn't support multiple result sets, PDO_MySQL doesn't support orgtable
-	if (extension_loaded("mysqli")) {
+	if (!$forcePdo && extension_loaded("mysqli")) {
 		class Min_DB extends MySQLi {
 			var $extension = "MySQLi";
 			
@@ -48,7 +48,7 @@ if (!defined("DRIVER")) {
 			}
 		}
 		
-	} elseif (extension_loaded("mysql") && !(ini_get("sql.safe_mode") && extension_loaded("pdo_mysql"))) {
+	} elseif (!$forcePdo && extension_loaded("mysql") && !(ini_get("sql.safe_mode") && extension_loaded("pdo_mysql"))) {
 		class Min_DB {
 			var
 				$extension = "MySQL", ///< @var string extension name
@@ -65,6 +65,7 @@ if (!defined("DRIVER")) {
 			* @return bool
 			*/
 			function connect($server, $username, $password) {
+//				throw new Exception;
 				$this->_link = @mysql_connect(
 					($server != "" ? $server : ini_get("mysql.default_host")),
 					("$server$username" != "" ? $username : ini_get("mysql.default_user")),
