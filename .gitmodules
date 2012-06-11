@@ -19,3 +19,11 @@
 [submodule "CodeMirror2"]
 	path = externals/CodeMirror2
 	url = git://github.com/marijnh/CodeMirror2.git
+
+[submodule "nette"]
+	path = nette
+	url = git://github.com/nette/nette.git
+
+[submodule "notorm"]
+	path = notorm
+	url = git://github.com/vrana/notorm.git
