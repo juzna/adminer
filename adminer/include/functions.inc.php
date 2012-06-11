@@ -296,6 +296,7 @@ function get_rows($query, $connection2 = null, $error = "<p class='error'>") {
 			$return[] = $row;
 		}
 	} elseif (!$result && !is_object($connection2) && $error && defined("PAGE_HEADER")) {
+		throw new Exception(error());
 		echo $error . error() . "\n";
 	}
 	return $return;

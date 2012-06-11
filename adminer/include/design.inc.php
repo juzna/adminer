@@ -75,10 +75,10 @@ document.body.className = document.body.className.replace(/ nojs/, ' js');
 		echo "<div class='message'>" . implode("</div>\n<div class='message'>", $messages) . "</div>\n";
 		unset($_SESSION["messages"][$uri]);
 	}
-	$databases = &get_session("dbs");
-	if (DB != "" && $databases && !in_array(DB, $databases, true)) {
-		$databases = null;
-	}
+	// $databases = &get_session("dbs");
+	// if (DB != "" && $databases && !in_array(DB, $databases, true)) {
+	// 	$databases = null;
+	// }
 	if ($error) {
 		echo "<div class='error'>$error</div>\n";
 	}

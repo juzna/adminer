@@ -11,7 +11,7 @@ include __DIR__ . '/../nette/Nette/Loaders/NetteLoader.php';
 Nette\Loaders\NetteLoader::getInstance()->register();
 
 $cred = $adminer->credentials();
-$db = new \Nette\Database\Connection("mysql:host=$cred[0];dbname=" . DB, $cred[1], $cred[2]);
+$db = new \Nette\Database\Connection("sqlsrv:server=$cred[0];Database=" . DB, $cred[1], $cred[2]);
 $db->setDatabaseReflection(new \Nette\Database\Reflection\DiscoveredReflection());
 
 
@@ -36,13 +36,13 @@ $codemirror_mode = ($jush == "sql" ? "mysql" : "plsql");
 page_header(lang('Nette Database query'), $error, array(), "", "<link rel='stylesheet' href='$codemirror_path/lib/codemirror.css'>");
 
 if (!$error && $_POST) {
-	$fp = false;
+	// $fp = false;
 	$query = $_POST["query"];
-	if ($query) {
+	// if ($query) {
 		$query = eval("return ${query}->getSql();");
-		if (function_exists('memory_get_usage')) {
-			@ini_set("memory_limit", max(ini_bytes("memory_limit"), 2 * strlen($query) + memory_get_usage() + 8e6)); // @ - may be disabled, 2 - substr and trim, 8e6 - other variables
-		}
+		// if (function_exists('memory_get_usage')) {
+		// 	@ini_set("memory_limit", max(ini_bytes("memory_limit"), 2 * strlen($query) + memory_get_usage() + 8e6)); // @ - may be disabled, 2 - substr and trim, 8e6 - other variables
+		// }
 //		if ($query != "" && strlen($query) < 1e6) { // don't add big queries
 //			$q = $query . (ereg(";[ \t\r\n]*\$", $query) ? "" : ";"); //! doesn't work with DELIMITER |
 //			if (!$history || reset(end($history)) != $q) { // no repeated queries
@@ -56,10 +56,10 @@ if (!$error && $_POST) {
 //		$delimiter = ";";
 		$offset = 0;
 		$empty = true;
-		$connection2 = connect(); // connection for exploring indexes and EXPLAIN (to not replace FOUND_ROWS()) //! PDO - silent error
-		if (is_object($connection2) && DB != "") {
-			$connection2->select_db(DB);
-		}
+		// $connection2 = connect(); // connection for exploring indexes and EXPLAIN (to not replace FOUND_ROWS()) //! PDO - silent error
+		// if (is_object($connection2) && DB != "") {
+		// 	$connection2->select_db(DB);
+		// }
 //		$commands = 0;
 		$errors = array();
 		$error_lines = array();
@@ -103,6 +103,7 @@ if (!$error && $_POST) {
 						$empty = false;
 						$q = $query; // substr($query, 0, $pos);
 //						$commands++;
+						var_dump(1);
 						$print = "<pre id='sql'><code class='jush-$jush'>" . shorten_utf8(trim($q), 1000) . "</code></pre>\n";
 //						if (!$_POST["only_errors"]) {
 							echo $print;
@@ -112,7 +113,7 @@ if (!$error && $_POST) {
 						$start = microtime(); // microtime(true) is available since PHP 5
 						//! don't allow changing of character_set_results, convert encoding of displayed query
 						if ($connection->multi_query($q) && is_object($connection2) && preg_match("~^$space*USE\\b~isU", $q)) {
-							$connection2->query($q);
+							// $connection2->query($q);
 						}
 						do {
 							$result = $connection->store_result();
@@ -127,7 +128,7 @@ if (!$error && $_POST) {
 									break 2;
 								}
 							} elseif (is_object($result)) {
-								$orgtables = select($result, $connection2);
+								//$orgtables = select($result, $connection2);
 								if (!$_POST["only_errors"]) {
 									echo "<form action='' method='post'>\n";
 									echo "<p>" . ($result->num_rows ? lang('%d row(s)', $result->num_rows) : "") . $time;
@@ -138,15 +139,15 @@ if (!$error && $_POST) {
 										. "<input type='hidden' name='query' value='" . h($q) . "'>"
 										. " <input type='submit' name='export' value='" . lang('Export') . "' onclick='eventStop(event);'><input type='hidden' name='token' value='$token'></span>\n"
 									;
-									if ($connection2 && preg_match("~^($space|\\()*SELECT\\b~isU", $q) && ($explain = explain($connection2, $q))) {
-										$id = "explain";
-										echo ", <a href='#$id' onclick=\"return !toggle('$id');\">EXPLAIN</a>$export";
-										echo "<div id='$id' class='hidden'>\n";
-										select($explain, $connection2, ($jush == "sql" ? "http://dev.mysql.com/doc/refman/" . substr($connection->server_info, 0, 3) . "/en/explain-output.html#explain_" : ""), $orgtables);
-										echo "</div>\n";
-									} else {
-										echo $export;
-									}
+									// if ($connection2 && preg_match("~^($space|\\()*SELECT\\b~isU", $q) && ($explain = explain($connection2, $q))) {
+									// 	$id = "explain";
+									// 	echo ", <a href='#$id' onclick=\"return !toggle('$id');\">EXPLAIN</a>$export";
+									// 	echo "<div id='$id' class='hidden'>\n";
+									// 	select($explain, $connection2, ($jush == "sql" ? "http://dev.mysql.com/doc/refman/" . substr($connection->server_info, 0, 3) . "/en/explain-output.html#explain_" : ""), $orgtables);
+									// 	echo "</div>\n";
+									// } else {
+									// 	echo $export;
+									// }
 									echo "</form>\n";
 								}
 							} else {
@@ -177,9 +178,9 @@ if (!$error && $_POST) {
 			echo "<p class='error'>" . lang('Error in query') . ": " . implode("", $errors) . "\n";
 		}
 		//! MS SQL - SET SHOWPLAN_ALL OFF
-	} else {
-		echo "<p class='error'>" . upload_error($query) . "\n";
-	}
+	// } else {
+	// 	echo "<p class='error'>" . upload_error($query) . "\n";
+	// }
 }
 ?>
 
